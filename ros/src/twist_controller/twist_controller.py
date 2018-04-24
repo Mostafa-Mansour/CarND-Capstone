@@ -44,7 +44,7 @@ class Controller(object):
         # TODO: Change the arg, kwarg list to suit your needs
         # Return throttle, brake, steer
         if not dwb_enabled:
-        	self.pid.reset()
+        	self.pid_controller.reset()
         	return 0, 0, 0
         
         current_vel=self.low_pass.filt(current_vel)
