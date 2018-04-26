@@ -14,6 +14,7 @@ from scipy.spatial import KDTree
 
 STATE_COUNT_THRESHOLD = 3
 
+
 class TLDetector(object):
     def __init__(self):
         rospy.init_node('tl_detector')
@@ -24,8 +25,8 @@ class TLDetector(object):
         self.waypoints_2d = None
         self.camera_image = None
         self.lights = []
-	rospy.loginfo("Starting TL")
-	sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
+        rospy.loginfo("Starting TL")
+        sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
         '''
@@ -35,13 +36,16 @@ class TLDetector(object):
         simulator. When testing on the vehicle, the color state will not be available. You'll need to
         rely on the position of the light and the camera image to predict it.
         '''
-        sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
-        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb, queue_size = 1)
+        sub3 = rospy.Subscriber('/vehicle/traffic_lights',
+                                TrafficLightArray, self.traffic_cb)
+        sub6 = rospy.Subscriber('/image_color', Image,
+                                self.image_cb, queue_size=1)
 
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
 
-        self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
+        self.upcoming_red_light_pub = rospy.Publisher(
+            '/traffic_waypoint', Int32, queue_size=1)
 
         self.bridge = CvBridge()
         self.light_classifier = TLClassifier()
@@ -58,15 +62,16 @@ class TLDetector(object):
         self.pose = msg
 
     def waypoints_cb(self, waypoints):
-	rospy.loginfo("waypoints_cb")
+        rospy.loginfo("waypoints_cb")
         self.waypoints = waypoints
-	if not self.waypoints_2d:
-		rospy.loginfo('way_call 2')
-		self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
-		self.waypoint_tree = KDTree(self.waypoints_2d)
+        if not self.waypoints_2d:
+            rospy.loginfo('way_call 2')
+            self.waypoints_2d = [[waypoint.pose.pose.position.x,
+                                  waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
+            self.waypoint_tree = KDTree(self.waypoints_2d)
 
     def traffic_cb(self, msg):
-#	rospy.loginfo("traffic_cb")
+        #	rospy.loginfo("traffic_cb")
         self.lights = msg.lights
 
     def image_cb(self, msg):
@@ -107,7 +112,7 @@ class TLDetector(object):
         Returns:
             int: index of the closest waypoint in self.waypoints
         """
-        #TODO implement
+        # TODO implement
         closest_idx = self.waypoint_tree.query([x, y], 1)[1]
         return closest_idx
 
@@ -150,9 +155,10 @@ class TLDetector(object):
         line_wp_idx = None
 
         if(self.pose):
-            car_wp_idx = self.get_closest_waypoint(self.pose.pose.position.x, self.pose.pose.position.y)
+            car_wp_idx = self.get_closest_waypoint(
+                self.pose.pose.position.x, self.pose.pose.position.y)
 
-            #TODO find the closest visible traffic light (if one exists)
+            # TODO find the closest visible traffic light (if one exists)
             diff = len(self.waypoints.waypoints)
             for i, light in enumerate(self.lights):
                 # Get stop line waypoint index
@@ -169,8 +175,9 @@ class TLDetector(object):
             state = self.get_light_state(closest_light)
 #	    return 100, state
             return line_wp_idx, state
-        
+
         return -1, TrafficLight.UNKNOWN
+
 
 if __name__ == '__main__':
     try:
